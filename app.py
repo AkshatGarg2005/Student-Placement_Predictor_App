@@ -1,40 +1,44 @@
-# app.py
 from flask import Flask, render_template, request
 import pickle
 import numpy as np
 
 app = Flask(__name__)
 
-# Securely load the saved Random Forest classification model
-with open('placement_model.pkl', 'rb') as file:
-    model = pickle.load(file)
+# loading the classification model binary file
+with open('placement_model.pkl', 'rb') as f:
+    model = pickle.load(f)
 
 @app.route('/')
-def home():
+def index():
     return render_template('index.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
     if request.method == 'POST':
         try:
-            # Extract form inputs strictly as numerical values
+            # parsing form fields to correct primitive datatypes
             cgpa = float(request.form['cgpa'])
-            placement_exam_marks = float(request.form['placement_exam_marks'])
+            communication_skills = float(request.form['communication_skills'])
+            resume_score = float(request.form['resume_score'])
+            coding_score = float(request.form['coding_score'])
+            attendance_placement = float(request.form['attendance_placement'])
 
-            # Align inputs into a 2D array for the scikit-learn model
-            features = np.array([[cgpa, placement_exam_marks]])
+            # packaging parameters into 2d array for scikit-learn inference
+            features = np.array([[cgpa, communication_skills, resume_score, coding_score, attendance_placement]])
             
-            # Predict status (0 = Not Placed, 1 = Placed)
+            # running true ml inference
             prediction = model.predict(features)[0]
             
+            # mapping prediction bits directly to string outcomes
             if prediction == 1:
-                result_text = "Placed 🎉"
+                status = "Placed 🎉"
             else:
-                result_text = "Not Placed 😔"
-
-            return render_template('index.html', prediction_text=f'Placement Status: {result_text}')
+                status = "Not Placed 😔"
+                
+            return render_template('index.html', prediction_text=f'Placement Verdict: {status}')
+            
         except Exception as e:
-            return render_template('index.html', prediction_text="Error: Please verify your input parameters.")
+            return render_template('index.html', prediction_text="Error updating calculation arrays.")
 
 if __name__ == '__main__':
     app.run(debug=True)

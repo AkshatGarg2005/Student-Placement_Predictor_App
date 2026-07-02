@@ -1,20 +1,20 @@
-# Use an official, lightweight Python base image
+# Using slim python image for faster builds and lower resource footprint
 FROM python:3.10-slim
 
-# Set the working directory inside the container sandbox
+# Setting the internal container working directory
 WORKDIR /app
 
-# Copy the requirements file first to optimize layer caching
+# Copying requirements first to leverage Docker container layer caching
 COPY requirements.txt .
 
-# Install dependencies inside the sandbox environment
+# Installing required libraries inside the sandbox
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the remaining project files
+# Copying the rest of the application files to the container
 COPY . .
 
-# Expose port 10000 (Render default port)
+# Exposing port 10000 which is Render's default routing port
 EXPOSE 10000
 
-# Run Gunicorn production server bound to Render's default port
+# Executing gunicorn production WSGI server on port 10000
 CMD ["gunicorn", "--bind", "0.0.0.0:10000", "app:app"]
